@@ -1,0 +1,72 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
+
+public class NetworkManager : MonoBehaviourPunCallbacks
+{
+
+    private List<RoomInfo> roomsList; //lista kaikista huoneista
+    private const string roomName = "TimonHuone";
+
+    public GUIStyle myStyle;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        myStyle.normal.textColor = Color.red;
+        myStyle.fontSize = 20;
+        roomsList = new List<RoomInfo>();
+        //Yhdistet‰‰n serveriin
+
+        PhotonNetwork.ConnectUsingSettings();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    private void OnGUI()
+    {
+        GUILayout.Label(PhotonNetwork.IsConnectedAndReady.ToString(), myStyle);
+        GUILayout.Label(PhotonNetwork.InLobby.ToString(), myStyle); //True jos lobbyssa, false jos muualla.
+
+        if(PhotonNetwork.InRoom == false)
+        {
+            if (GUI.Button(new Rect(100, 100, 200, 100), "Create room"))
+            {
+                PhotonNetwork.CreateRoom(roomName + System.Guid.NewGuid().ToString("N"));
+            }
+
+            if(roomsList.Count > 0)
+            {
+                int i = 0;
+                foreach(RoomInfo room in roomsList)
+                {
+                    if(GUI.Button(new Rect(100, 250 + 110 * i, 200, 100), "Join: " + room.Name))
+                    {
+                        PhotonNetwork.JoinRoom(room.Name);
+                    }
+                    i++;
+                }
+            }
+        }
+    }
+
+    //P‰ivitet‰‰n paikallinen huone listaus. Ajetaan automaattisesti kun serverill‰ tapahtuu huone muutoksia.
+    //Serverin huonelistaus tulee parametrin‰ automaattisesti
+
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+        //  base.OnRoomListUpdate(roomList);
+        roomsList = roomsList;
+    }
+
+    public override void OnConnectedToMaster()
+    {
+        PhotonNetwork.JoinLobby();
+    }
+}
